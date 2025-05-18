@@ -44,6 +44,7 @@ async def smooth_progress_updater(bot, chat_id, msg_id, ws_url):
     async def websocket_listener():
         nonlocal target, final_data, last_update
         async with aiohttp.ClientSession() as session:
+            print(ws_url)
             async with session.ws_connect(ws_url) as ws:
                 async for msg in ws:
                     data = json.loads(msg.data)
