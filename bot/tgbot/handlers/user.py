@@ -18,9 +18,9 @@ from ..utils.db_utils import get_repo
 user_router = Router()
 MAX_FILE_SIZE = 15 * 1024 * 1024
 
-@user_router.message(F.photo)
-async def photo(message: Message):
-    await message.reply(message.photo[-1].file_id)
+# @user_router.message(F.photo)
+# async def photo(message: Message):
+#     await message.reply(message.photo[-1].file_id)
 
 
 @user_router.message(Command("forward"))
