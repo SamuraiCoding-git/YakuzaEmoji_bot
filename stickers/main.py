@@ -43,6 +43,11 @@ async def notify_clients(task_id: str, payload: dict):
             logging.warning(f"❌ Ошибка при отправке WebSocket: {e}")
 
 async def process_generate_pack(task_id: str, request: GeneratePackRequest):
+    for _ in range(50):
+        if websocket_connections.get(task_id):
+            print("Connected ✅")
+            break
+        await asyncio.sleep(0.1)
     start_queue_time = time.time()
     repo = await get_repo(config)
 
