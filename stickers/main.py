@@ -1,6 +1,7 @@
 import asyncio
 import time
 import uuid
+import logging
 from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
@@ -14,6 +15,8 @@ from stickers.services.media_downloader import MediaDownloader
 from stickers.services.pack_generator import PackGenerator
 from stickers.tasks.queue import TaskQueue
 
+logging.basicConfig(level=logging.INFO)
+
 app = FastAPI(title="Sticker Core API")
 
 app.add_middleware(
@@ -23,7 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Инициализация
 task_queue = TaskQueue()
 media_downloader = MediaDownloader()
 pack_generator = PackGenerator()
@@ -31,21 +33,22 @@ config = load_config()
 progress_store: Dict[str, Dict] = {}
 websocket_connections: Dict[str, List[WebSocket]] = {}
 
-
 async def notify_clients(task_id: str, payload: dict):
     connections = websocket_connections.get(task_id, [])
+    logging.info(f"📤 Отправка в {len(connections)} клиентов: {payload}")
     for ws in connections:
         try:
             await ws.send_json(payload)
-        except Exception:
-            pass
-
+        except Exception as e:
+            logging.warning(f"❌ Ошибка при отправке WebSocket: {e}")
 
 async def process_generate_pack(task_id: str, request: GeneratePackRequest):
     start_queue_time = time.time()
     repo = await get_repo(config)
 
     try:
+        logging.info(f"🚀 Начата задача {task_id} для user_id={request.user_id}")
+
         progress_store[task_id] = {
             "status": "accepted",
             "progress": 0,
@@ -59,16 +62,17 @@ async def process_generate_pack(task_id: str, request: GeneratePackRequest):
         await notify_clients(task_id, progress_store[task_id])
 
         media_path = await media_downloader.download(request.file_id, request.media_type)
+        logging.info(f"📥 Скачан файл: {media_path}")
 
         async def progress_callback(done: int, total: int, cutting: int, phase: int):
+            logging.info(f"📦 Прогресс-колбэк: done={done}, total={total}, cutting={cutting}, phase={phase}")
             if phase == 1:
-                # 0–9%: этап нарезки
                 progress = int((cutting / total) * 9)
                 message = f"Нарезка {cutting}/{total}"
             else:
-                # 10–99%: этап загрузки
                 progress = 10 + int((done / total) * 90)
                 message = f"Загружено {done}/{total}"
+
             payload = {
                 "status": "processing",
                 "progress": progress,
@@ -78,6 +82,7 @@ async def process_generate_pack(task_id: str, request: GeneratePackRequest):
             progress_store[task_id] = payload
             await notify_clients(task_id, payload)
 
+        # 👇 если внутри generate_pack нет await progress_callback() — ничего не сработает
         pack_url, duration, queued = await pack_generator.generate_pack(
             media_path,
             request.user_id,
@@ -95,28 +100,29 @@ async def process_generate_pack(task_id: str, request: GeneratePackRequest):
             file_id=request.file_id,
             width=request.width,
             height=request.height,
-            durations={
-                "queued": queued,
-                "duration": duration
-            }
+            durations={"queued": queued, "duration": duration}
         )
 
-        progress_store[task_id]["progress"] = 100
-        progress_store[task_id]["status"] = "done"
-        progress_store[task_id]["message"] = "Пак успешно создан!"
-        progress_store[task_id]["sticker_pack_url"] = pack_url
+        progress_store[task_id] = {
+            "status": "done",
+            "progress": 100,
+            "message": "Пак успешно создан!",
+            "sticker_pack_url": pack_url
+        }
         await notify_clients(task_id, progress_store[task_id])
 
     except Exception as e:
-        progress_store[task_id]["status"] = "error"
-        progress_store[task_id]["message"] = f"Ошибка: {str(e)}"
-        progress_store[task_id]["progress"] = 0
+        logging.exception("❌ Ошибка в process_generate_pack:")
+        progress_store[task_id] = {
+            "status": "error",
+            "progress": 0,
+            "message": f"Ошибка: {str(e)}",
+            "sticker_pack_url": None
+        }
         await notify_clients(task_id, progress_store[task_id])
-
 
 async def schedule_task(task_id: str, request):
     asyncio.create_task(task_queue.add_task(process_generate_pack, task_id, request))
-
 
 @app.post("/generate", response_model=GeneratePackResponse)
 async def generate_pack(request: GeneratePackRequest, background_tasks: BackgroundTasks):
@@ -130,17 +136,16 @@ async def generate_pack(request: GeneratePackRequest, background_tasks: Backgrou
     background_tasks.add_task(schedule_task, task_id, request)
     return GeneratePackResponse(success=True, task_id=task_id, status_url=f"/progress/{task_id}")
 
-
 @app.get("/progress/{task_id}", response_model=ProgressResponse)
 async def get_progress(task_id: str):
     if task_id not in progress_store:
         raise HTTPException(status_code=404, detail="Task not found")
     return ProgressResponse(**progress_store[task_id])
 
-
 @app.websocket("/ws/progress/{task_id}")
 async def websocket_progress(websocket: WebSocket, task_id: str):
     await websocket.accept()
+    logging.info(f"🔌 WebSocket подключен: {task_id}")
 
     if task_id not in websocket_connections:
         websocket_connections[task_id] = []
@@ -163,5 +168,6 @@ async def websocket_progress(websocket: WebSocket, task_id: str):
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        logging.info(f"❌ WebSocket отключён: {task_id}")
         websocket_connections[task_id].remove(websocket)
         ping_task.cancel()
