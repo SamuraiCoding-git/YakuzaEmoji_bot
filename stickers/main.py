@@ -35,7 +35,7 @@ websocket_connections: Dict[str, List[WebSocket]] = {}
 
 async def notify_clients(task_id: str, payload: dict):
     connections = websocket_connections.get(task_id, [])
-    logging.info(f"📤 Отправка в {len(connections)} клиентов: {payload}")
+    print(f"📡 Отправка: {payload} → {len(websocket_connections.get(task_id, []))} клиентов")
     for ws in connections:
         try:
             await ws.send_json(payload)
