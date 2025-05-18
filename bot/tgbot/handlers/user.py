@@ -18,9 +18,9 @@ from ..utils.db_utils import get_repo
 user_router = Router()
 MAX_FILE_SIZE = 15 * 1024 * 1024
 
-# @user_router.message(F.photo)
-# async def photo(message: Message):
-#     await message.reply(message.photo[-1].file_id)
+@user_router.message(F.photo)
+async def photo(message: Message):
+    await message.reply(message.photo[-1].file_id)
 
 
 @user_router.message(Command("forward"))
@@ -125,7 +125,7 @@ async def user_start(message: Message, config: Config, command: CommandObject):
         hbold(f"💴 Конничива, {message.from_user.first_name}\n"),
         "Отправь фото или видео боту и получи emoji pack ⚔️\n",
     )
-    photo = "AgACAgQAAxkBAAIBzWgow7cf69T5A87SXfH7qpcAAR1SSgACxMYxGxNoQVHkyskt4Mi8fgEAAwIAA3kAAzYE"
+    photo = "AgACAgEAAxkBAAIFWGgqNaeGa3aWoFc1ybGIemCPKzQpAAI4sjEb6glRRYk6DU1UChwAAQEAAwIAA3kAAzYE"
     await message.answer_photo(
         photo=photo,
         caption="\n".join(caption)
@@ -232,7 +232,7 @@ async def check_sub(call: CallbackQuery):
         hbold(f"💴 Конничива, {call.message.chat.first_name}\n"),
         "Отправь фото или видео боту и получи emoji pack ⚔️\n",
     )
-    photo = "AgACAgQAAxkBAAIBzWgow7cf69T5A87SXfH7qpcAAR1SSgACxMYxGxNoQVHkyskt4Mi8fgEAAwIAA3kAAzYE"
+    photo = "AgACAgEAAxkBAAIFWGgqNaeGa3aWoFc1ybGIemCPKzQpAAI4sjEb6glRRYk6DU1UChwAAQEAAwIAA3kAAzYE"
     await call.message.answer_photo(
         photo=photo,
         caption="\n".join(caption)

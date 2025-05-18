@@ -16,7 +16,7 @@ async def check_sub(call: CallbackQuery):
 
 @channel_router.message()
 async def channel_sub(message: Message, config: Config):
-    photo = "AgACAgQAAxkBAAIBz2gow7zO7PiYFgmVQkinZN-2xPCwAALFxjEbE2hBUZ9eCRaGgrdbAQADAgADeQADNgQ"
+    photo = "AgACAgEAAxkBAAIFWmgqNdpI0Kcl1TJLq1sLYU3ovh32AAI6sjEb6glRRbb7aN3REK06AQADAgADeQADNgQ"
     caption = hbold("Подпишись на канал, чтобы использовать бота 🐉")
     await message.answer_photo(
         photo=photo,
