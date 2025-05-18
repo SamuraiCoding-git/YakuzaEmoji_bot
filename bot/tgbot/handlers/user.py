@@ -227,7 +227,18 @@ async def size_options_handler(call: CallbackQuery, callback_data: SizeOptions, 
         await call.message.answer(f"❌ Ошибка при генерации:\n<pre>{tb}</pre>", parse_mode="HTML")
 
 @user_router.callback_query(F.data == "check_sub")
-async def check_sub(call: CallbackQuery):
+async def check_sub(call: CallbackQuery, config: Config, state: FSMContext):
+    data = await state.get_data()
+    repo = await get_repo(config)
+
+    await repo.user.create_user(
+        user_id=call.message.chat.id,
+        full_name=call.message.chat.full_name,
+        is_premium=True if call.message.chat.is_premium else False,
+        username=call.message.chat.username,
+        referred_by=data.get("referred_by")
+    )
+
     caption = (
         hbold(f"💴 Конничива, {call.message.chat.first_name}\n"),
         "Отправь фото или видео боту и получи emoji pack ⚔️\n",

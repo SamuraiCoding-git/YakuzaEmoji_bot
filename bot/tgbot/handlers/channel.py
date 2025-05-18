@@ -1,4 +1,6 @@
 from aiogram import Router, F
+from aiogram.filters import CommandObject
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.markdown import hbold
 
@@ -15,7 +17,8 @@ async def check_sub(call: CallbackQuery):
     await call.answer("Вы не подписаны 👺", show_alert=True)
 
 @channel_router.message()
-async def channel_sub(message: Message, config: Config):
+async def channel_sub(message: Message, config: Config, state: FSMContext, command: CommandObject):
+    await state.update_data(referred_by=command.args)
     photo = "AgACAgEAAxkBAAIFWmgqNdpI0Kcl1TJLq1sLYU3ovh32AAI6sjEb6glRRbb7aN3REK06AQADAgADeQADNgQ"
     caption = hbold("Подпишись на канал, чтобы использовать бота 🐉")
     await message.answer_photo(
