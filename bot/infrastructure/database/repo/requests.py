@@ -19,45 +19,45 @@ class RequestsRepo:
     session: AsyncSession
 
     @property
-    def audit_log(self) -> AuditLogRepo:
+    def audit_logs(self) -> AuditLogRepo:
         return AuditLogRepo(self.session)
 
     @property
-    def discount(self) -> DiscountRepo:
+    def discounts(self) -> DiscountRepo:
         return DiscountRepo(self.session)
 
     @property
-    def gate_bot(self) -> GateBotRepo:
+    def gate_bots(self) -> GateBotRepo:
         return GateBotRepo(self.session)
 
     @property
-    def payment(self) -> PaymentRepo:
+    def payments(self) -> PaymentRepo:
         return PaymentRepo(self.session)
 
     @property
-    def product_category(self) -> ProductCategoryRepo:
+    def product_categories(self) -> ProductCategoryRepo:
         return ProductCategoryRepo(self.session)
 
     @property
-    def product_discount(self) -> ProductDiscountRepo:
+    def product_discounts(self) -> ProductDiscountRepo:
         return ProductDiscountRepo(self.session)
 
     @property
-    def product(self) -> ProductRepo:
+    def products(self) -> ProductRepo:
         return ProductRepo(self.session)
 
     @property
-    def referral_transaction(self) -> ReferralTransactionRepo:
+    def referral_transactions(self) -> ReferralTransactionRepo:
         return ReferralTransactionRepo(self.session)
 
     @property
-    def report(self) -> ReportRepo:
+    def reports(self) -> ReportRepo:
         return ReportRepo(self.session)
 
     @property
-    def user_gate_entry(self) -> UserGateEntryRepo:
+    def user_gate_entries(self) -> UserGateEntryRepo:
         return UserGateEntryRepo(self.session)
 
     @property
-    def user(self) -> UserRepo:
+    def users(self) -> UserRepo:
         return UserRepo(self.session)

@@ -1,7 +1,7 @@
 from sqlalchemy.future import select
 from sqlalchemy import insert
 from typing import Optional, List
-from stickers.infrastructure.database.models import Sticker
+from api.infrastructure.database.models import Sticker
 from .base import BaseRepo
 
 

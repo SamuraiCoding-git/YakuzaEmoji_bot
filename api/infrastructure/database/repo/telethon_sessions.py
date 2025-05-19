@@ -2,7 +2,7 @@ from sqlalchemy.future import select
 from sqlalchemy import insert, update
 from typing import Optional, List
 from .base import BaseRepo
-from stickers.infrastructure.database.models.telethon_sessions import TelethonSession
+from api.infrastructure.database.models.telethon_sessions import TelethonSession
 
 class TelethonSessionRepo(BaseRepo):
     async def add_session(self, session_name: str) -> TelethonSession:

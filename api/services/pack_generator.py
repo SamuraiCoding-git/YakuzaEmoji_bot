@@ -2,11 +2,11 @@ import logging
 import time
 from typing import Optional, Callable, Awaitable, Tuple
 
-from stickers.clients.session_manager import SessionManager
-from stickers.config import load_config
-from stickers.services.emoji_sender import EmojiSender  # ⬅️ Новый импорт
-from stickers.services.emoji_uploader import EmojiPackUploader
-from stickers.services.media_processor import MediaProcessor
+from api.clients.session_manager import SessionManager
+from api.config import load_config
+from api.services.emoji_sender import EmojiSender  # ⬅️ Новый импорт
+from api.services.emoji_uploader import EmojiPackUploader
+from api.services.media_processor import MediaProcessor
 
 logger = logging.getLogger("PackGenerator")
 

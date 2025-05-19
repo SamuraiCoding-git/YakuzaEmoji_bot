@@ -5,9 +5,9 @@ from math import ceil, floor
 from telethon.tl.functions.messages import GetStickerSetRequest, InstallStickerSetRequest
 from telethon.tl.types import InputStickerSetShortName, DocumentAttributeCustomEmoji
 
-from stickers.config import load_config
-from stickers.clients.session_manager import SessionManager
-from stickers.services.parse_mode import CustomParseMode
+from api.config import load_config
+from api.clients.session_manager import SessionManager
+from api.services.parse_mode import CustomParseMode
 
 logger = logging.getLogger(__name__)
 

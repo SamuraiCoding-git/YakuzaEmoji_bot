@@ -3,10 +3,10 @@ from typing import AsyncContextManager, Callable
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from stickers.config import DbConfig, Config
-from stickers.infrastructure.database.models import Base
+from api.config import DbConfig, Config
+from api.infrastructure.database.models import Base
 
-from stickers.infrastructure.database.repo.requests import RequestsRepo
+from api.infrastructure.database.repo.requests import RequestsRepo
 
 
 async def create_session_pool(db: DbConfig, echo=False) -> Callable[[], AsyncContextManager[AsyncSession]]:

@@ -4,7 +4,7 @@ import random
 from typing import List
 from pathlib import Path
 
-from stickers.clients.telethon_client import TelethonClientWrapper
+from api.clients.telethon_client import TelethonClientWrapper
 
 logger = logging.getLogger("SessionManager")
 

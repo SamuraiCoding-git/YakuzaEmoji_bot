@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 class MediaProcessor:
     def __init__(self, base_temp_dir: Optional[str] = None):
         if base_temp_dir is None:
-            from stickers.config import load_config
+            from api.config import load_config
             config = load_config()
             base_temp_dir = str(config.media.temp_media_dir)
 

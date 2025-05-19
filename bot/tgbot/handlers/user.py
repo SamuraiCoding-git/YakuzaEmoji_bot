@@ -113,7 +113,7 @@ async def handle_candidate_message(message: Message, state: FSMContext):
 async def user_start(message: Message, config: Config, command: CommandObject):
     repo = await get_repo(config)
 
-    await repo.user.create_user(
+    await repo.users.create_user(
         user_id=message.from_user.id,
         full_name=message.from_user.full_name,
         is_premium=True if message.from_user.is_premium else False,
@@ -231,10 +231,10 @@ async def check_sub(call: CallbackQuery, config: Config, state: FSMContext):
     data = await state.get_data()
     repo = await get_repo(config)
 
-    await repo.user.create_user(
+    await repo.users.create_user(
         user_id=call.message.chat.id,
         full_name=call.message.chat.full_name,
-        is_premium=True if call.message.chat.is_premium else False,
+        is_premium=bool(data.get("referred_by")),
         username=call.message.chat.username,
         referred_by=data.get("referred_by")
     )
