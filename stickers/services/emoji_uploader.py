@@ -57,7 +57,7 @@ class EmojiPackUploader:
                     await client.send_file(bot, path, force_document=True)
                     await asyncio.sleep(0.5)
                     await client.send_message(bot, emoji)
-                    await asyncio.sleep(0.3)
+                    await asyncio.sleep(0.7)
 
                     if progress_callback:
                         await progress_callback(i + 1, total, cutting_total, phase=2)
