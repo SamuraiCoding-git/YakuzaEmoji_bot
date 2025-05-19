@@ -15,7 +15,10 @@ from stickers.services.media_downloader import MediaDownloader
 from stickers.services.pack_generator import PackGenerator
 from stickers.tasks.queue import TaskQueue
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.ERROR,
+    filename='mylog.log'
+)
 
 app = FastAPI(title="Sticker Core API")
 
