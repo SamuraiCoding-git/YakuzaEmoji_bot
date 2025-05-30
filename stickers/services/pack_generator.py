@@ -14,11 +14,11 @@ class PackGenerator:
     def __init__(self):
         self.config = load_config()
         self.media_processor = MediaProcessor(self.config.media.temp_media_dir)
-        # self.uploader = EmojiPackUploader(
-        #     bot_username=self.config.emoji_uploader.bot_username,
-        #     emoji_list=self.config.emoji_uploader.emoji_list,
-        #     pack_name_prefix=self.config.emoji_uploader.pack_name_prefix,
-        # )
+        self.uploader = EmojiPackUploader(
+            bot_username=self.config.emoji_uploader.bot_username,
+            emoji_list=self.config.emoji_uploader.emoji_list,
+            pack_name_prefix=self.config.emoji_uploader.pack_name_prefix,
+        )
 
         session_files = [str(p) for p in self.config.telegram_api.sessions_dir.glob("*.session")]
         self.session_manager = SessionManager(
@@ -66,19 +66,19 @@ class PackGenerator:
         client = await self.session_manager.get_client()
 
         # Загрузка в Telegram
-        # link = await self.uploader.upload(
-        #     client=client.client,
-        #     user_id=user_id,
-        #     tiles_dir=tiles_dir,
-        #     pack_type=pack_type,
-        #     progress_callback=progress_callback,
-        # )
+        link = await self.uploader.upload(
+            client=client.client,
+            user_id=user_id,
+            tiles_dir=tiles_dir,
+            pack_type=pack_type,
+            progress_callback=progress_callback,
+        )
 
         await self.session_manager.release_client(client)
         self.media_processor.cleanup_media(tiles_dir)
 
-        # if not link:
-        #     raise RuntimeError("Не удалось создать эмодзи-пак")
+        if not link:
+            raise RuntimeError("Не удалось создать эмодзи-пак")
 
         duration = time.time() - created
         queued = created - queue_started if queue_started else None
@@ -88,19 +88,18 @@ class PackGenerator:
             if queued else f"[PackGenerator] ✅ Пак создан за {duration:.2f} сек"
         )
 
-        # ⬇️ Добавляем отправку emoji-сетки пользователю
-        # short_name = link
-        #
-        # try:
-        #     # 🧱 Собираем и отправляем сетку (3 выравнивания)
-        #     await self.emoji_sender.send_emoji(
-        #         user_id=user_id,
-        #         short_name=short_name,
-        #         rows=int(height / 100),
-        #         cols=int(width / 100)
-        #     )
-        #
-        # except Exception as e:
-        #     logger.error(f"[PackGenerator] ⚠️ Не удалось отправить emoji-сетку: {e}")
-        #
-        # return f"https://t.me/addemoji/{link}", duration, queued
+        short_name = link
+
+        try:
+            # 🧱 Собираем и отправляем сетку (3 выравнивания)
+            await self.emoji_sender.send_emoji(
+                user_id=user_id,
+                short_name=short_name,
+                rows=int(height / 100),
+                cols=int(width / 100)
+            )
+
+        except Exception as e:
+            logger.error(f"[PackGenerator] ⚠️ Не удалось отправить emoji-сетку: {e}")
+
+        return f"https://t.me/addemoji/{link}", duration, queued

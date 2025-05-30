@@ -17,8 +17,8 @@ async def check_sub(call: CallbackQuery):
     await call.answer("Вы не подписаны 👺", show_alert=True)
 
 @channel_router.message()
-async def channel_sub(message: Message, config: Config, state: FSMContext, command: CommandObject):
-    await state.update_data(referred_by=command.args)
+async def channel_sub(message: Message, config: Config, state: FSMContext):
+    await state.update_data(referred_by=message.text.split(" ")[1])
     photo = "AgACAgEAAxkBAAIFWmgqNdpI0Kcl1TJLq1sLYU3ovh32AAI6sjEb6glRRbb7aN3REK06AQADAgADeQADNgQ"
     caption = hbold("Подпишись на канал, чтобы использовать бота 🐉")
     await message.answer_photo(
