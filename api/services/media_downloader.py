@@ -1,6 +1,7 @@
 import os
 import logging
 import requests
+
 from pathlib import Path
 from datetime import datetime
 
@@ -16,7 +17,7 @@ class MediaDownloader:
         self.bot_token = self.config.telegram_api.token
         self.api_url = f"https://api.telegram.org/file/bot{self.bot_token}"
 
-    async def download(self, file_id: str, media_type: str) -> str:
+    async def download(self, file_id: str) -> str:
         """
         Скачивает файл по file_id через Telegram Bot API
         """

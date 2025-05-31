@@ -3,9 +3,7 @@ from typing import Optional
 
 class GeneratePackResponse(BaseModel):
     success: bool
-    task_id: Optional[str] = None
-    status_url: Optional[str] = None
-    message: Optional[str] = None
+    link: str
 
 
 class ProgressResponse(BaseModel):

@@ -36,10 +36,11 @@ class EmojiSender:
         Возвращает dict с сообщениями: {"left": msg1, "center": msg2, "right": msg3}
         """
         try:
-            grid_variants = await self.build_emoji_grid(short_name, rows, cols)
-
             client = await self.session_manager.get_premium_client()
             client.client.parse_mode = CustomParseMode('markdown')
+
+            grid_variants = await self.build_emoji_grid(client, short_name, rows, cols)
+
             await client.client.get_dialogs()
 
             await client.client.send_message("@YakuzaEmoji_bot", f"/forward {user_id} {grid_variants['right'].replace(' ', '')}")
@@ -57,17 +58,15 @@ class EmojiSender:
 
             await self.session_manager.release_client(client)
         except Exception as e:
-            logger.error(f"[EmojiSender] ❌ Ошибка при отправке emoji-сетки: {e}")
+            import traceback
+            logger.error(f"[EmojiSender] ❌ Ошибка при отправке emoji-сетки:\n{traceback.format_exc()}")
             return {}
 
-    async def build_emoji_grid(self, short_name: str, rows: int, cols: int) -> dict:
+    async def build_emoji_grid(self, client, short_name: str, rows: int, cols: int) -> dict:
         """
         Возвращает три варианта сетки (left, center, right), каждая строка — 15 emoji wide.
         """
         assert cols <= 15, "❌ Максимум 15 колонок для Telegram"
-
-        client = await self.session_manager.get_premium_client()
-        client.client.parse_mode = CustomParseMode('markdown')
 
         try:
             await client.client(InstallStickerSetRequest(

@@ -128,16 +128,16 @@ class LoggerConfig:
 
 
 @dataclass
-class EmojiUploaderConfig:
+class PackGeneratorConfig:
     bot_username: str
     pack_name_prefix: str
     emoji_list: List[str]
 
     @staticmethod
-    def from_env(env: Env) -> "EmojiUploaderConfig":
+    def from_env(env: Env) -> "PackGeneratorConfig":
         emojis_raw = env.str("EMOJI_LIST", "")
         emojis_cleaned = [e.strip().strip("'\"") for e in emojis_raw.split(",") if e.strip()]
-        return EmojiUploaderConfig(
+        return PackGeneratorConfig(
             bot_username=env.str("EMOJI_UPLOADER_BOT_USERNAME", "YakuzaEmoji_bot"),
             pack_name_prefix=env.str("EMOJI_UPLOADER_PACK_NAME_PREFIX", "ep"),
             emoji_list=emojis_cleaned
@@ -149,7 +149,7 @@ class Config:
     telegram_api: TelegramApiConfig
     media: MediaConfig
     logger: LoggerConfig
-    emoji_uploader: EmojiUploaderConfig
+    pack_generator: PackGeneratorConfig
     redis: Optional[RedisConfig]
     db: DbConfig
 
@@ -162,7 +162,7 @@ def load_config(path: Optional[str] = '.env') -> Config:
         telegram_api=TelegramApiConfig.from_env(env),
         media=MediaConfig.from_env(env),
         logger=LoggerConfig.from_env(env),
-        emoji_uploader=EmojiUploaderConfig.from_env(env),
+        pack_generator=PackGeneratorConfig.from_env(env),
         redis=RedisConfig.from_env(env),
         db=DbConfig.from_env(env)
     )

@@ -1,17 +1,18 @@
 import subprocess
+import shutil
+import logging
+
 from pathlib import Path
 from PIL import Image
 from datetime import datetime
-import shutil
-import logging
 from typing import Optional, Callable, Awaitable
+from api.config import load_config
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 class MediaProcessor:
     def __init__(self, base_temp_dir: Optional[str] = None):
         if base_temp_dir is None:
-            from api.config import load_config
             config = load_config()
             base_temp_dir = str(config.media.temp_media_dir)
 
@@ -48,8 +49,8 @@ class MediaProcessor:
 
                     index += 1
 
-            logging.info(f"Фото нарезано в папку: {folder}")
-            return str(folder)
+            logging.info(f"Фото нарезано в папку: {folder.resolve()}")
+            return str(folder.resolve())
 
         except Exception as e:
             logging.error(f"Ошибка в crop_image_to_tiles: {e}")

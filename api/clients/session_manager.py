@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import random
 from typing import List
 from pathlib import Path
 
@@ -20,7 +19,7 @@ class SessionManager:
             p = Path(f)
             if p.exists() and p.suffix == ".session":
                 client = TelethonClientWrapper(str(p), api_id, api_hash)
-                client.in_use = False  # добавляем состояние
+                client.in_use = False
                 self._clients.append(client)
             else:
                 logger.warning(f"⚠️ Пропущен невалидный .session файл: {f}")
@@ -30,55 +29,42 @@ class SessionManager:
 
     async def start_all(self):
         await asyncio.gather(*(c.start() for c in self._clients))
-        logger.info(f"✅ Запущено {len(self._clients)} клиентов")
+        premium_count = sum(1 for c in self._clients if c.is_premium)
+        logger.info(f"✅ Запущено {len(self._clients)} клиентов ({premium_count} премиум)")
 
     async def disconnect_all(self):
         await asyncio.gather(*(c.disconnect() for c in self._clients))
         logger.info("❎ Все клиенты отключены")
 
     async def get_client(self) -> TelethonClientWrapper:
-        async with self._lock:
-            for client in self._clients:
-                if not client.in_use:
-                    try:
-                        if not await client.is_connected():
-                            await client.start()
-                        client.in_use = True
-                        return client
-                    except Exception as e:
-                        logger.warning(f"⚠️ Не удалось стартовать клиент {client.session_file.name}: {e}")
-                        continue
-            raise RuntimeError("❌ Нет доступных клиентов")
+        """
+        Возвращает первый свободный клиент (любой, в том числе non-premium)
+        """
+        return await self._get_client_internal(premium_only=False)
 
     async def get_premium_client(self) -> TelethonClientWrapper:
-        """Возвращает случайного доступного premium-клиента (уже запущенного и с is_premium=True)"""
+        """
+        Возвращает только премиум-клиента
+        """
+        return await self._get_client_internal(premium_only=True)
+
+    async def _get_client_internal(self, premium_only: bool) -> TelethonClientWrapper:
         async with self._lock:
-            logger.info("[SessionManager] 🔍 Поиск доступного premium-клиента...")
-
             for client in self._clients:
-                logger.debug(
-                    f"[SessionManager] Клиент {client.session_file.name}: "
-                    f"is_premium={client.is_premium}"
-                )
-
-            premium_candidates = [
-                client for client in self._clients
-                if not client.in_use and client.is_premium is True
-            ]
-
-            logger.info(f"[SessionManager] 🔎 Найдено {len(premium_candidates)} доступных premium-клиентов")
-
-            if not premium_candidates:
-                raise RuntimeError("❌ Нет доступных premium клиентов")
-
-            chosen = random.choice(premium_candidates)
-            chosen.in_use = True
-
-            logger.info(
-                f"[SessionManager] ✅ Выбран premium-клиент: {chosen.session_file.name}"
-            )
-            return chosen
+                if client.in_use:
+                    continue
+                if premium_only and not client.is_premium:
+                    continue
+                try:
+                    if not await client.is_connected():
+                        await client.start()
+                    client.in_use = True
+                    logger.info(f"📲 Выдан клиент {client.session_file.name} (premium={client.is_premium})")
+                    return client
+                except Exception as e:
+                    logger.warning(f"⚠️ Не удалось стартовать клиент {client.session_file.name}: {e}")
+                    continue
+            raise RuntimeError("❌ Нет доступных клиентов" + (" (только премиум)" if premium_only else ""))
 
     async def release_client(self, client: TelethonClientWrapper):
-        """Освобождает клиента (можно вызывать после использования)"""
         client.in_use = False

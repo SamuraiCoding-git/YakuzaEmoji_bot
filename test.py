@@ -5,10 +5,6 @@ import asyncio
 
 API_TOKEN = "7848210284:AAG5Rl2npWVYZ5KH2LppClgm3tly7bZyAGA"
 
-def prepare_sticker(input_path: str, output_path: str):
-    img = Image.open(input_path).convert("RGBA")  # Конвертируем с прозрачностью
-    img.save(output_path, format="PNG", optimize=True)
-
 async def create_custom_emoji_set(bot: Bot, user_id: int, bot_username: str, sticker_path: str):
     input_sticker = InputSticker(
         sticker=FSInputFile(sticker_path),
@@ -16,7 +12,7 @@ async def create_custom_emoji_set(bot: Bot, user_id: int, bot_username: str, sti
         emoji_list=["😎"],      # Обязательно список эмодзи
     )
 
-    set_name = f"emoji_by_{bot_username}".lower()
+    set_name = f"prem_emoji_by_{bot_username}".lower()
 
     try:
         result = await bot.create_new_sticker_set(
@@ -34,16 +30,14 @@ async def create_custom_emoji_set(bot: Bot, user_id: int, bot_username: str, sti
         print(f"Ошибка: {e}")
 
 async def main():
-    input_file = "yakuza.jpg"         # Исходный файл
-    output_file = "yakuza_64x64.png"  # Для Telegram
-
-    prepare_sticker(input_file, output_file)
+    input_file = "durov.png"         # Исходный файл
 
     bot = Bot(token=API_TOKEN)
     user_id = 422999166                 # Твой user_id
-    bot_username = "YakuzaEmoji_bot"   # Имя бота без @
+    bot_username = await bot.get_me()
+    bot_username = bot_username.username # Имя бота без @
 
-    await create_custom_emoji_set(bot, user_id, bot_username, output_file)
+    await create_custom_emoji_set(bot, user_id, bot_username, input_file)
     await bot.session.close()
 
 if __name__ == "__main__":

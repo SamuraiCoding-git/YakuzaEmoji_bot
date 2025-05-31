@@ -1,19 +1,18 @@
+import asyncio
 import re
 import traceback
 
+import httpx
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.markdown import hbold, hitalic
 
 from ..config import Config
 from ..keyboards.callback_data_factory import SizeOptions
 from ..keyboards.inline import generate_size_options_keyboard
 from ..misc.states import ForwardState
-from ..services.api import start_generation
-from ..services.progress_watcher import smooth_progress_updater
-from ..utils.db_utils import get_repo
 
 user_router = Router()
 MAX_FILE_SIZE = 15 * 1024 * 1024
@@ -111,15 +110,15 @@ async def handle_candidate_message(message: Message, state: FSMContext):
 
 @user_router.message(CommandStart())
 async def user_start(message: Message, config: Config, command: CommandObject):
-    repo = await get_repo(config)
-
-    await repo.users.create_user(
-        user_id=message.from_user.id,
-        full_name=message.from_user.full_name,
-        is_premium=True if message.from_user.is_premium else False,
-        username=message.from_user.username,
-        referred_by=command.args
-    )
+    # repo = await get_repo(config)
+    #
+    # await repo.users.create_user(
+    #     user_id=message.from_user.id,
+    #     full_name=message.from_user.full_name,
+    #     is_premium=True if message.from_user.is_premium else False,
+    #     username=message.from_user.username,
+    #     referred_by=command.args
+    # )
 
     caption = (
         hbold(f"💴 Конничива, {message.from_user.first_name}\n"),
@@ -185,6 +184,12 @@ async def media_handler(message: Message, state: FSMContext):
         "Например:\n",
         hitalic("4x4 — 4 эмодзи в ширину и 4 в высоту")
     )
+
+    if len(keyboard.inline_keyboard) == 0:
+        text = (
+            hbold(f"Неподходящие размеры {'фото' if media_type == 'photo' else 'видео'}\n"),
+            "Отправьте другое\n",
+        )
     await message.answer("\n".join(text), reply_markup=keyboard)
 
 
@@ -208,36 +213,37 @@ async def size_options_handler(call: CallbackQuery, callback_data: SizeOptions, 
         "media_type": media_type,
         "width": width,
         "height": height,
-        "user_id": user_id
+        "user_id": user_id,
     }
 
     try:
-        response = await start_generation(payload)
-        task_id = response["task_id"]
-        ws_url = f"{config.misc.api_base_url.replace('http', 'ws')}/ws/progress/{task_id}"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://localhost:8000/api/stickers/generate",
+                json=payload,
+                timeout=240
+            )
+            response.raise_for_status()
+            result = response.json()
 
-        msg = await call.message.answer("🚀 Пак создаётся...")
-        await smooth_progress_updater(call.bot, call.message.chat.id, msg.message_id, ws_url)
-
-        await call.message.delete()
-
-
-    except Exception as e:
+    except httpx.HTTPStatusError as e:
+        await call.message.answer(f"❌ Сервер вернул ошибку: {e.response.text}")
+    except Exception:
         tb = traceback.format_exc()
-        await call.message.answer(f"❌ Ошибка при генерации:\n<pre>{tb}</pre>", parse_mode="HTML")
+        print(tb)
 
 @user_router.callback_query(F.data == "check_sub")
 async def check_sub(call: CallbackQuery, config: Config, state: FSMContext):
     data = await state.get_data()
-    repo = await get_repo(config)
-
-    await repo.users.create_user(
-        user_id=call.message.chat.id,
-        full_name=call.message.chat.full_name,
-        is_premium=bool(data.get("referred_by")),
-        username=call.message.chat.username,
-        referred_by=data.get("referred_by")
-    )
+    # repo = await get_repo(config)
+    #
+    # await repo.users.create_user(
+    #     user_id=call.message.chat.id,
+    #     full_name=call.message.chat.full_name,
+    #     is_premium=bool(data.get("referred_by")),
+    #     username=call.message.chat.username,
+    #     referred_by=data.get("referred_by")
+    # )
 
     caption = (
         hbold(f"💴 Конничива, {call.message.chat.first_name}\n"),

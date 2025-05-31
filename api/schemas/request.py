@@ -7,3 +7,5 @@ class GeneratePackRequest(BaseModel):
     width: Optional[int] = Field(default=100, ge=100, le=1200)
     height: Optional[int] = Field(default=100, ge=100, le=10000)
     user_id: int
+    referral_bot_name: Optional[str] = None
+    # priority: int = Field(default=5, ge=0, le=9, description="0 - наивысший, 9 - низший приоритет")

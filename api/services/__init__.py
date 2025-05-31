@@ -1,2 +1,1 @@
-from .emoji_uploader import EmojiPackUploader
 from .media_processor import MediaProcessor
