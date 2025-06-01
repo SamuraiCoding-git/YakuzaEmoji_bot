@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.future import select
 from sqlalchemy import insert
 from typing import Optional, List
@@ -74,3 +76,16 @@ class StickerRepo(BaseRepo):
             await self.session.commit()
             return True
         return False
+
+    async def get_daily_packs(self, user_id: int) -> int:
+        now = datetime.utcnow()
+        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        stmt = (
+            select(Sticker)
+            .where(
+                Sticker.user_id == user_id,
+                Sticker.created_at >= start_of_day
+            )
+        )
+        result = await self.session.execute(stmt)
+        return len(result.scalars().all())

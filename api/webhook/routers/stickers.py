@@ -1,9 +1,11 @@
 import logging
+import time
 
+import redis
 from aiogram import Bot
-from aiogram.enums import StickerFormat
 from fastapi import APIRouter, HTTPException
 
+from api.queue.redis_queue import StickerRedisQueue
 from api.schemas.request import GeneratePackRequest
 from api.schemas.response import GeneratePackResponse
 from api.services.pack_generator import PackGenerator
@@ -14,45 +16,69 @@ logging.basicConfig(level=logging.INFO)
 
 stickers_router = APIRouter(prefix="/stickers")
 config = load_config(".env")
+queue = StickerRedisQueue()
 bot = Bot(config.telegram_api.token)
 pack_generator = PackGenerator(
     bot=bot,
     config=config
 )
 
+redis_client = redis.from_url("redis://localhost:6379/0")
+
+COOLDOWN_SECONDS = 5 * 60  # 5 минут
+
+def is_admin(user_id: int):
+    return user_id in config.telegram_api.admin_ids
+
 @stickers_router.post("/generate", response_model=GeneratePackResponse)
 async def generate_pack(request: GeneratePackRequest):
     repo = get_repo_instance()
     try:
-        logging.info(f"🔧 Генерация стикерпакета для пользователя: {request.user_id}")
+        # Проверяем подписку
+        is_free = True
+        if is_admin(request.user_id):
+            priority = 0
+            is_free = False
+        else:
+            subs = await repo.user_subscriptions.get_active_subscription(request.user_id)
+            if subs:
+                priority = getattr(request, "priority", 5)
+                is_free = False
+            else:
+                priority = getattr(request, "priority", 5)
+                is_free = True
 
-        link, duration = await pack_generator.generate_pack(
-            request.user_id,
-            request.file_id,
-            request.width,
-            request.height,
-            StickerFormat.STATIC if request.media_type == "photo" else StickerFormat.VIDEO,
-            request.referral_bot_name
-        )
+        # Кулдаун для бесплатных
+        if is_free:
+            key = f"cooldown:{request.user_id}"
+            last_ts = redis_client.get(key)
+            now = int(time.time())
+            if last_ts and now - int(last_ts) < COOLDOWN_SECONDS:
+                seconds_left = COOLDOWN_SECONDS - (now - int(last_ts))
+                minutes = seconds_left // 60
+                seconds = seconds_left % 60
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"Бесплатная генерация доступна раз в 5 минут. Повторите через {minutes} мин {seconds} сек."
+                )
+            # Устанавливаем новый кулдаун
+            redis_client.set(key, now)
 
-        logging.info(f"✅ Сгенерировано {int((request.width * request.height) / 10000)} стикеров")
+        # Постановка задачи
+        task = {
+            "user_id": request.user_id,
+            "file_id": request.file_id,
+            "width": request.width,
+            "height": request.height,
+            "media_type": request.media_type,
+            "referral_bot_name": request.referral_bot_name,
+        }
+        queue.put(task, priority)
+        return GeneratePackResponse(success=True, message="Задача поставлена в очередь")
 
-        await repo.stickers.create_sticker(
-            request.user_id,
-            link,
-            request.file_id,
-            StickerFormat.STATIC if request.media_type == "photo" else StickerFormat.VIDEO,
-            request.width,
-            request.height,
-            {"duration": duration}
-        )
-
-        return GeneratePackResponse(
-            success=True,
-            link=link
-        )
-
+    except HTTPException:
+        raise  # прокидываем дальше
     except Exception as e:
         import traceback
-        logging.error(f"❌ Ошибка генерации стикерпака: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="Failed to generate sticker pack")
+        logging.error(f"❌ Ошибка постановки задачи: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Failed to enqueue sticker pack task")

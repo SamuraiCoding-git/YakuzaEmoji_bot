@@ -1,22 +1,22 @@
-from redis.asyncio import Redis
+import redis
 import json
-
-REDIS_URL = "redis://localhost:6379/0"
-QUEUE_NAME = "sticker_generate_queue"
+import time
 
 class StickerRedisQueue:
-    def __init__(self):
-        self.redis = Redis.from_url(REDIS_URL)
+    def __init__(self, redis_url="redis://localhost:6379/0", queue_name="sticker_generate_priority"):
+        self.redis = redis.from_url(redis_url, decode_responses=True)
+        self.queue_name = queue_name
 
-    async def put(self, payload: dict):
-        await self.redis.rpush(QUEUE_NAME, json.dumps(payload))
+    def put(self, task: dict, priority: int):
+        # Чем ниже priority, тем выше приоритет
+        score = priority
+        task["created_at"] = int(time.time())
+        self.redis.zadd(self.queue_name, {json.dumps(task): score})
 
-    async def get(self):
-        # blpop возвращает (queue_name, data)
-        item = await self.redis.blpop(QUEUE_NAME, timeout=5)
-        if item:
-            return json.loads(item[1])
+    def pop(self) -> dict | None:
+        result = self.redis.zrange(self.queue_name, 0, 0, withscores=False)
+        if result:
+            task_json = result[0]
+            self.redis.zrem(self.queue_name, task_json)
+            return json.loads(task_json)
         return None
-
-    async def close(self):
-        await self.redis.close()
