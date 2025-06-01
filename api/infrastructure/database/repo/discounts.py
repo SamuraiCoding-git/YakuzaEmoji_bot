@@ -3,8 +3,8 @@ from typing import Optional, List
 
 from sqlalchemy import select, insert
 
-from bot.infrastructure.database.models import Discount, ProductDiscount
-from bot.infrastructure.database.repo.base import BaseRepo
+from api.infrastructure.database.models import Discount, ProductDiscount
+from api.infrastructure.database.repo.base import BaseRepo
 
 
 class DiscountRepo(BaseRepo):

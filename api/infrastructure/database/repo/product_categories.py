@@ -2,8 +2,8 @@ from typing import Optional, List
 
 from sqlalchemy import insert, select
 
-from bot.infrastructure.database.models import ProductCategory, Product
-from bot.infrastructure.database.repo.base import BaseRepo
+from api.infrastructure.database.models import ProductCategory, Product
+from api.infrastructure.database.repo.base import BaseRepo
 
 
 class ProductCategoryRepo(BaseRepo):

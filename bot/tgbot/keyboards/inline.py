@@ -58,3 +58,79 @@ def main_keyboard() -> InlineKeyboardMarkup:
         ]
     ])
     return keyboard
+
+def admin_main_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🛍️ Продукты", callback_data="admin_products")
+    builder.button(text="📁 Категории", callback_data="admin_categories")
+    builder.button(text="🤖 Боты", callback_data="admin_bots")
+    builder.button(text="🎟️ Скидки", callback_data="admin_discounts")
+    builder.button(text="📊 Статистика", callback_data="admin_stats")
+    builder.adjust(2)
+    return builder.as_markup()
+
+def back_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin_back")]
+    ])
+
+def products_list_keyboard(products):
+    builder = InlineKeyboardBuilder()
+    for prod in products:
+        builder.button(
+            text=f"{prod['product_name']} ({prod['price']}₽)",
+            callback_data=f"product_{prod['id']}"
+        )
+    builder.button(text="➕ Добавить продукт", callback_data="add_product")
+    builder.button(text="⬅️ Назад", callback_data="admin_back")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def product_detail_keyboard(product_id):
+    builder = InlineKeyboardBuilder()
+    builder.button(text="💲 Изменить цену", callback_data=f"edit_price_{product_id}")
+    builder.button(text="⬅️ Назад", callback_data="admin_products")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def categories_list_keyboard(categories):
+    builder = InlineKeyboardBuilder()
+    for cat in categories:
+        builder.button(
+            text=cat["category_name"],
+            callback_data=f"category_{cat['id']}"
+        )
+    builder.button(text="➕ Добавить категорию", callback_data="add_category")
+    builder.button(text="⬅️ Назад", callback_data="admin_back")
+    builder.adjust(1)
+    return builder.as_markup()
+
+def audience_main_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ По минимальному уровню", callback_data="set_min_access_level")
+    builder.button(text="✅ По списку уровней", callback_data="set_access_levels")
+    builder.button(text="📭 Без подписки", callback_data="set_no_subscription")
+    builder.button(text="💡 Взаимодействовал с кампанией", callback_data="set_interacted")
+    builder.button(text="🛒 Кликал, но не купил", callback_data="set_clicked_not_purchased")
+    builder.button(text="🔢 Лимит рассылки", callback_data="set_limit")
+    builder.button(text="➡️ Далее", callback_data="audience_confirm")
+    builder.button(text="❌ Отмена", callback_data="audience_cancel")
+    builder.adjust(2, 2, 2)
+    return builder.as_markup()
+
+def access_levels_keyboard(
+    levels: list[int],  # Список доступных уровней (например, [1, 6, 12, 99])
+    multi: bool = False,
+    selected: set[int] = None,
+) -> InlineKeyboardBuilder:
+    selected = selected or set()
+    builder = InlineKeyboardBuilder()
+    for level in sorted(levels):
+        mark = "✅ " if level in selected else ""
+        cb = f"toggle_access_{level}" if multi else f"choose_access_{level}"
+        builder.button(text=f"{mark}Уровень {level}", callback_data=cb)
+    if multi:
+        builder.button(text="Готово", callback_data="access_levels_done")
+    builder.button(text="⬅️ Назад", callback_data="audience_back")
+    builder.adjust(1)
+    return builder.as_markup()

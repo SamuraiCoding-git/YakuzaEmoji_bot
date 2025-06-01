@@ -8,6 +8,7 @@ from api.schemas.request import GeneratePackRequest
 from api.schemas.response import GeneratePackResponse
 from api.services.pack_generator import PackGenerator
 from api.config import load_config
+from api.webhook.utils.dependencies import get_repo_instance
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,6 +22,7 @@ pack_generator = PackGenerator(
 
 @stickers_router.post("/generate", response_model=GeneratePackResponse)
 async def generate_pack(request: GeneratePackRequest):
+    repo = get_repo_instance()
     try:
         logging.info(f"🔧 Генерация стикерпакета для пользователя: {request.user_id}")
 
@@ -34,6 +36,16 @@ async def generate_pack(request: GeneratePackRequest):
         )
 
         logging.info(f"✅ Сгенерировано {int((request.width * request.height) / 10000)} стикеров")
+
+        await repo.stickers.create_sticker(
+            request.user_id,
+            link,
+            request.file_id,
+            StickerFormat.STATIC if request.media_type == "photo" else StickerFormat.VIDEO,
+            request.width,
+            request.height,
+            {"duration": duration}
+        )
 
         return GeneratePackResponse(
             success=True,

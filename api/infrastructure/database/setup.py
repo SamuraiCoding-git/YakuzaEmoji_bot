@@ -3,11 +3,8 @@ from typing import AsyncContextManager, Callable
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from api.config import DbConfig, Config
+from api.config import DbConfig
 from api.infrastructure.database.models import Base
-
-from api.infrastructure.database.repo.requests import RequestsRepo
-
 
 async def create_session_pool(db: DbConfig, echo=False) -> Callable[[], AsyncContextManager[AsyncSession]]:
     engine = create_async_engine(
@@ -24,10 +21,4 @@ async def create_session_pool(db: DbConfig, echo=False) -> Callable[[], AsyncCon
 
     session_pool = sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
     return session_pool
-
-
-async def get_repo(config: Config) -> RequestsRepo:
-    session_pool = await create_session_pool(config.db)
-    async with session_pool() as session:
-        return RequestsRepo(session)
 

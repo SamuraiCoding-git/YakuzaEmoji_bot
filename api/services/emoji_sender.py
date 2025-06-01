@@ -2,6 +2,7 @@ import asyncio
 import logging
 from math import ceil, floor
 
+from aiogram import Bot
 from telethon.tl.functions.messages import GetStickerSetRequest, InstallStickerSetRequest
 from telethon.tl.types import InputStickerSetShortName, DocumentAttributeCustomEmoji
 
@@ -26,7 +27,7 @@ class EmojiSender:
         self.session_manager = session_manager
         self.started = False
 
-    async def send_emoji(self, user_id: int, short_name: str, rows: int, cols: int) -> dict:
+    async def send_emoji(self, user_id: int, bot: Bot, short_name: str, rows: int, cols: int) -> dict:
         """
         Собирает emoji-сетку и отправляет три отдельных сообщения:
         - с выравниванием по левому краю
@@ -43,7 +44,7 @@ class EmojiSender:
 
             await client.client.get_dialogs()
 
-            await client.client.send_message("@YakuzaEmoji_bot", f"/forward {user_id} {grid_variants['right'].replace(' ', '')}")
+            await client.client.send_message("@YakuzaEmoji_bot", f"/forward {user_id} {short_name} {grid_variants['right'].replace(' ', '')}")
 
             await asyncio.sleep(1)
 
@@ -61,6 +62,7 @@ class EmojiSender:
             import traceback
             logger.error(f"[EmojiSender] ❌ Ошибка при отправке emoji-сетки:\n{traceback.format_exc()}")
             return {}
+
 
     async def build_emoji_grid(self, client, short_name: str, rows: int, cols: int) -> dict:
         """

@@ -2,18 +2,18 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.infrastructure.database.repo.referral import ReferralRepo
+from api.infrastructure.database.repo.referral_stats import ReferralStatsRepo
 from api.infrastructure.database.repo.stickers import StickerRepo
-from api.infrastructure.database.repo.telethon_sessions import TelethonSessionRepo
-from api.infrastructure.database.repo.audit_logs import AuditLogRepo
 from api.infrastructure.database.repo.discounts import DiscountRepo
-from api.infrastructure.database.repo.gate_bot_repo import GateBotRepo
+from api.infrastructure.database.repo.gate_bot import GateBotRepo
 from api.infrastructure.database.repo.payments import PaymentRepo
 from api.infrastructure.database.repo.product_categories import ProductCategoryRepo
 from api.infrastructure.database.repo.product_discounts import ProductDiscountRepo
 from api.infrastructure.database.repo.products import ProductRepo
 from api.infrastructure.database.repo.referral_transactions import ReferralTransactionRepo
-from api.infrastructure.database.repo.reports import ReportRepo
 from api.infrastructure.database.repo.user_gate_entries import UserGateEntryRepo
+from api.infrastructure.database.repo.user_subscriptions import UserSubscriptionRepo
 from api.infrastructure.database.repo.users import UserRepo
 
 
@@ -26,10 +26,6 @@ class RequestsRepo:
     """
 
     session: AsyncSession
-
-    @property
-    def audit_logs(self) -> AuditLogRepo:
-        return AuditLogRepo(self.session)
 
     @property
     def discounts(self) -> DiscountRepo:
@@ -60,10 +56,6 @@ class RequestsRepo:
         return ReferralTransactionRepo(self.session)
 
     @property
-    def reports(self) -> ReportRepo:
-        return ReportRepo(self.session)
-
-    @property
     def user_gate_entries(self) -> UserGateEntryRepo:
         return UserGateEntryRepo(self.session)
 
@@ -72,9 +64,25 @@ class RequestsRepo:
         return UserRepo(self.session)
 
     @property
-    def telethon_sessions(self) -> TelethonSessionRepo:
-        return TelethonSessionRepo(self.session)
-
-    @property
     def stickers(self) -> StickerRepo:
         return StickerRepo(self.session)
+
+    @property
+    def referrals(self) -> ReferralRepo:
+        return ReferralRepo(self.session)
+
+    @property
+    def referral_stats(self) -> ReferralStatsRepo:
+        return ReferralStatsRepo(self.session)
+
+    @property
+    def promo_campaigns(self) -> PromoCampaignRepo:
+        return PromoCampaignRepo(self.session)
+
+    @property
+    def promo_interactions(self) -> PromoInteractionLogRepo:
+        return PromoInteractionLogRepo(self.session)
+
+    @property
+    def user_subscriptions(self) -> UserSubscriptionRepo:
+        return UserSubscriptionRepo(self.session)
