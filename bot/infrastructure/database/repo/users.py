@@ -3,8 +3,8 @@ from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from bot.infrastructure.database.models import User
-from bot.infrastructure.database.repo.base import BaseRepo
+from api.infrastructure.database.models import User, UserSubscription, PromoInteractionLog, Product
+from api.infrastructure.database.repo.base import BaseRepo
 
 
 class UserRepo(BaseRepo):
@@ -67,4 +67,53 @@ class UserRepo(BaseRepo):
 
     async def get_all_users(self) -> List[User]:
         result = await self.session.execute(select(User))
+        return result.scalars().all()
+
+    async def get_users_for_promo(
+            self,
+            min_access_level: Optional[int] = None,
+            access_levels: Optional[List[int]] = None,
+            no_subscription: bool = False,
+            interacted_with_promo_id: Optional[int] = None,
+            clicked_but_not_purchased: bool = False,
+            limit: Optional[int] = None
+    ) -> List[User]:
+        stmt = select(User).distinct()
+
+        # Нет подписки
+        if no_subscription:
+            stmt = stmt.outerjoin(UserSubscription).where(UserSubscription.id.is_(None))
+
+        # По конкретным access_level
+        elif access_levels is not None:
+            stmt = (
+                stmt.join(UserSubscription)
+                .join(Product, UserSubscription.product_id == Product.id)
+                .where(Product.access_level.in_(access_levels))
+            )
+
+        # По минимальному уровню
+        elif min_access_level is not None:
+            stmt = (
+                stmt.join(UserSubscription)
+                .join(Product, UserSubscription.product_id == Product.id)
+                .where(Product.access_level >= min_access_level)
+            )
+
+        # Взаимодействие с кампанией
+        if interacted_with_promo_id is not None:
+            stmt = stmt.join(PromoInteractionLog).where(PromoInteractionLog.promo_id == interacted_with_promo_id)
+
+            if clicked_but_not_purchased:
+                stmt = stmt.where(
+                    PromoInteractionLog.clicked_at.isnot(None),
+                    PromoInteractionLog.purchased_at.is_(None)
+                )
+
+        # Ограничение и сортировка
+        if limit:
+            stmt = stmt.limit(limit)
+        stmt = stmt.order_by(User.id)
+
+        result = await self.session.execute(stmt)
         return result.scalars().all()

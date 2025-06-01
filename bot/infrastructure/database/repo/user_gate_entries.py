@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import select
-from bot.infrastructure.database.models import UserGateEntry
-from bot.infrastructure.database.repo.base import BaseRepo
+from api.infrastructure.database.models import UserGateEntry
+from api.infrastructure.database.repo.base import BaseRepo
 
 
 class UserGateEntryRepo(BaseRepo):
@@ -18,7 +18,7 @@ class UserGateEntryRepo(BaseRepo):
             self,
             user_id: int,
             gate_bot_id: int,
-            has_entered_main_bot: bool = True,
+            has_entered_main_bot: bool = False,
             enter_main_bot_date: datetime | None = None
     ) -> UserGateEntry:
         # Проверяем, есть ли запись для этого пользователя и gate_bot

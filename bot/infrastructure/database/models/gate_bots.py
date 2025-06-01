@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, Boolean
+from sqlalchemy import Integer, String, ForeignKey, Boolean, JSON
 from sqlalchemy.orm import relationship, mapped_column
 from .base import Base, TimestampMixin, TableNameMixin
 
@@ -8,7 +8,11 @@ class GateBot(Base, TimestampMixin, TableNameMixin):
     name = mapped_column(String(100), unique=True, nullable=False)
     token = mapped_column(String(255), nullable=False)
     owner_id = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    is_active = mapped_column(Boolean, default=True, nullable=False, comment="Статус активности Gate-бота (работает/не работает)")
+    is_active = mapped_column(Boolean, default=True, nullable=False,
+                              comment="Статус активности Gate-бота (работает/не работает)")
+
+    welcome_payload = mapped_column(JSON, nullable=True,
+                                    comment="Структура приветственного сообщения (текст, кнопки и т.д.)")
 
     user_entries = relationship("UserGateEntry", back_populates="gate_bot", cascade="all, delete-orphan")
     owner = relationship("User", back_populates="owned_gate_bots")

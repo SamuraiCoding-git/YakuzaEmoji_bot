@@ -92,6 +92,7 @@ class RedisConfig:
 @dataclass
 class TelegramApiConfig:
     token: str
+    admin_ids: list[int]
     api_id: int
     api_hash: str
     sessions_dir: Path = field(default_factory=lambda: BASE_DIR / "sessions")
@@ -100,6 +101,7 @@ class TelegramApiConfig:
     def from_env(env: Env) -> "TelegramApiConfig":
         return TelegramApiConfig(
             token=env.str("BOT_TOKEN", None),
+            admin_ids = env.list("ADMINS", subcast=int),
             api_id=env.int("API_ID"),
             api_hash=env.str("API_HASH"),
             sessions_dir=Path(env.str("SESSIONS_DIR", str(BASE_DIR / "sessions")))

@@ -2,8 +2,8 @@ from typing import List
 
 from sqlalchemy import select
 
-from bot.infrastructure.database.models import ProductDiscount, Discount
-from bot.infrastructure.database.repo.base import BaseRepo
+from api.infrastructure.database.models import ProductDiscount, Discount
+from api.infrastructure.database.repo.base import BaseRepo
 
 
 class ProductDiscountRepo(BaseRepo):

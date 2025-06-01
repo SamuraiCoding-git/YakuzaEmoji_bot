@@ -2,8 +2,8 @@ from typing import Optional, List
 
 from sqlalchemy import select, func, insert
 
-from bot.infrastructure.database.models import ReferralTransaction
-from bot.infrastructure.database.repo.base import BaseRepo
+from api.infrastructure.database.models import ReferralTransaction
+from api.infrastructure.database.repo.base import BaseRepo
 
 
 class ReferralTransactionRepo(BaseRepo):

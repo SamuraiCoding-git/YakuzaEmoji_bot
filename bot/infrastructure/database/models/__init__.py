@@ -1,8 +1,7 @@
 from .base import Base
+from .stickers import Sticker
 from .users import User
 from .user_subscriptions import UserSubscription
-from .reports import Report
-from .audit_logs import AuditLog
 from .product_categories import ProductCategory
 from .product_discounts import ProductDiscount
 from .products import Product
@@ -11,3 +10,7 @@ from .discounts import Discount
 from .payments import Payment
 from .gate_bots import GateBot
 from .user_gate_entries import UserGateEntry
+from .referral import Referral
+from .referral_stats import ReferralStats
+from .promo_campaign import PromoCampaign
+from .promo_interaction_log import PromoInteractionLog
