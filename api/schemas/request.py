@@ -3,6 +3,7 @@ from typing import Literal, Optional, List, Dict
 
 from pydantic.v1 import root_validator, HttpUrl
 
+
 class GeneratePackRequest(BaseModel):
     media_type: Literal["photo", "video", "document"]
     file_id: str
@@ -10,7 +11,8 @@ class GeneratePackRequest(BaseModel):
     height: Optional[int] = Field(default=100, ge=100, le=10000)
     user_id: int
     referral_bot_name: Optional[str] = None
-    priority: int = 5
+    # priority: int = Field(default=5, ge=0, le=9, description="0 - наивысший, 9 - низший приоритет")
+
 
 class BotRequest(BaseModel):
     token: str

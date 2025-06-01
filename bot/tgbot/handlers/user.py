@@ -10,13 +10,18 @@ from aiogram.utils.markdown import hbold, hitalic
 
 from ..config import Config
 from ..keyboards.callback_data_factory import SizeOptions
-from ..keyboards.inline import generate_size_options_keyboard
-from ..misc.states import ForwardState
+from ..keyboards.inline import generate_size_options_keyboard, admin_approve_keyboard, cancel_keyboard, \
+    payment_method_keyboard
+from ..misc.states import ForwardState, PaymentStates
 from ..services.api import APIClient
 
 user_router = Router()
 client = APIClient(base_url="http://localhost:8000")
 MAX_FILE_SIZE = 15 * 1024 * 1024
+
+USDT_TRC20 = "TFE3yHwMYPoCEdsNegFKUpkEJYvEqb4ScB"
+CARD = "2200150934247153"
+SBP = "+79857490785"
 
 # @user_router.message(F.photo)
 # async def photo(message: Message):
@@ -238,7 +243,7 @@ async def size_options_handler(call: CallbackQuery, callback_data: SizeOptions, 
     }
 
     try:
-         await client.post_json("stickers/generate", payload)
+         await client.request(method="post", path="stickers/generate", payload)
     except httpx.HTTPStatusError as e:
         await call.message.answer(f"❌ Сервер вернул ошибку: {e.response.text}")
     except Exception:
@@ -267,3 +272,90 @@ async def check_sub(call: CallbackQuery, config: Config, state: FSMContext):
         photo=photo,
         caption="\n".join(caption)
     )
+
+@user_router.message(F.text == "/pay")
+async def pay_start(message: Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(PaymentStates.choosing_method)
+    await message.answer("Выбери способ оплаты:", reply_markup=payment_method_keyboard())
+
+@user_router.callback_query(F.data == "pay_usdt_trc20")
+async def pay_usdt_trc20(call: CallbackQuery, state: FSMContext):
+    await state.set_state(PaymentStates.waiting_screenshot)
+    await call.message.edit_text(
+        f"Переведи нужную сумму USDT (TRC20) на адрес:\n<code>{USDT_TRC20}</code>\n\n"
+        "После оплаты отправь скриншот платежа.", reply_markup=cancel_keyboard()
+    )
+
+@user_router.callback_query(F.data == "pay_card")
+async def pay_card(call: CallbackQuery, state: FSMContext):
+    await state.set_state(PaymentStates.waiting_screenshot)
+    await call.message.edit_text(
+        f"Переведи сумму на карту или по СБП:\n"
+        f"<b>Карта:</b> <code>{CARD}</code>\n"
+        f"<b>СБП:</b> {SBP}\n\n"
+        "После оплаты отправь скриншот платежа.", reply_markup=cancel_keyboard()
+    )
+
+@user_router.message(PaymentStates.waiting_screenshot, F.photo)
+async def get_screenshot(message: Message, state: FSMContext):
+    await state.update_data(screenshot=message.photo[-1].file_id)
+    await state.set_state(PaymentStates.waiting_comment)
+    await message.answer("✅ Скриншот получен! Напиши комментарий к платежу (ник, срок подписки, email, что оплатил и т.д.)", reply_markup=cancel_keyboard())
+
+@user_router.message(PaymentStates.waiting_comment)
+async def get_comment(message: Message, state: FSMContext, config: Config):
+    data = await state.get_data()
+    user_id = message.from_user.id
+    username = message.from_user.username or user_id
+
+    for admin_id in config.tg_bot.admin_ids:
+        try:
+            await message.bot.send_message(
+                admin_id,
+                f"💸 Новый платёж от @{username}\nUserID: <code>{user_id}</code>\nКомментарий: <i>{message.text}</i>",
+                reply_markup=admin_approve_keyboard(user_id)
+            )
+            await message.bot.send_photo(admin_id, data["screenshot"])
+        except Exception as e:
+            print(e)
+    await state.clear()
+    await message.answer("Ваш платёж отправлен на ручную проверку. После подтверждения с вами свяжутся!")
+
+@user_router.callback_query(F.data == "cancel_payment")
+async def cancel_payment(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await call.message.edit_text("❌ Оплата отменена.")
+
+# --- Админ одобряет/отклоняет ---
+@user_router.callback_query(F.data.startswith("approve_payment_"))
+async def admin_approve_payment(call: CallbackQuery):
+    user_id = int(call.data.split("_")[-1])
+    # Вызов API для добавления подписки
+    try:
+        # Здесь можно подставить реальные данные (product_id, duration)
+        payload = {
+            "user_id": user_id,
+            "product_id": 1,  # ID продукта, подставьте актуальный
+            "duration": 30,   # Срок в днях, например 30 для месяца
+        }
+        resp = await client.post_json("user_subscriptions/add", payload)
+        await call.message.edit_text(f"✅ Подписка успешно выдана пользователю {user_id}.")
+        await call.bot.send_message(
+            user_id,
+            "🎉 Ваша оплата подтверждена, подписка активирована! Спасибо за поддержку."
+        )
+    except Exception as e:
+        await call.message.edit_text(f"Ошибка при выдаче подписки: {e}")
+
+@user_router.callback_query(F.data.startswith("decline_payment_"))
+async def admin_decline_payment(call: CallbackQuery):
+    user_id = int(call.data.split("_")[-1])
+    await call.message.edit_text(f"Платёж от пользователя {user_id} отклонён.")
+    try:
+        await call.bot.send_message(
+            user_id,
+            "❌ Ваш платёж не подтверждён. Свяжитесь с поддержкой для уточнения причин."
+        )
+    except Exception as e:
+        print(e)

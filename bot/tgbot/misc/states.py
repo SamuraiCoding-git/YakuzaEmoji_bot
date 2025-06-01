@@ -32,3 +32,9 @@ class AudienceSelectionStates(StatesGroup):
     entering_limit = State()                  # Ввод лимита
     confirm = State()                        # Подтверждение выбранных фильтров
     cancel = State()                         # Отмена выбора
+
+
+class PaymentStates(StatesGroup):
+    choosing_method = State()
+    waiting_screenshot = State()
+    waiting_comment = State()
