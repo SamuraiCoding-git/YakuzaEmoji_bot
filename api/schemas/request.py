@@ -17,7 +17,7 @@ class GeneratePackRequest(BaseModel):
 class BotRequest(BaseModel):
     token: str
     owner_id: int
-    main_bot_url: HttpUrl
+    # main_bot_url: HttpUrl
     owner_channel_url: str = None
     welcome_payload: Optional[dict] = None
 

@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.infrastructure.database.repo.promo_campaign import PromoCampaignRepo
+from api.infrastructure.database.repo.promo_interaction_log import PromoInteractionLogRepo
 from api.infrastructure.database.repo.referral import ReferralRepo
 from api.infrastructure.database.repo.referral_stats import ReferralStatsRepo
 from api.infrastructure.database.repo.stickers import StickerRepo

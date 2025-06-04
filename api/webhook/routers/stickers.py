@@ -41,7 +41,7 @@ async def generate_pack(request: GeneratePackRequest):
             request.user_id,
             link,
             request.file_id,
-            StickerFormat.STATIC if request.media_type == "photo" else StickerFormat.VIDEO,
+            StickerFormat.STATIC.value if request.media_type == "photo" else StickerFormat.VIDEO.value,
             request.width,
             request.height,
             {"duration": duration}

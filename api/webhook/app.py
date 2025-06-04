@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 
-from api. import load_config
+from api.config import load_config
 from api.infrastructure.database.repo.requests import RequestsRepo
 from api.infrastructure.database.setup import create_session_pool
 from api.webhook import routers
@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
         set_repo_instance(repo)
         yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 prefix_router = APIRouter()
 
 log_level = logging.INFO

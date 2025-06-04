@@ -12,17 +12,27 @@ class Product(Base, TimestampMixin, TableNameMixin):
     category_id = mapped_column(Integer, ForeignKey('productcategorys.id'), nullable=False)
 
     # Преимущества по тарифу
-    queue_priority = mapped_column(Integer, nullable=False, default=5)  # 0 = высший
-    simultaneous_packs = mapped_column(Integer, default=1)  # Сколько паков одновременно
+    queue_priority = mapped_column(Integer, nullable=False, default=5)
+    simultaneous_packs = mapped_column(Integer, default=1)
     gate_bot_access = mapped_column(Boolean, default=False)
-    gate_bot_customization = mapped_column(Boolean, default=False)  # Настройка приветствия
-    personal_bot_enabled = mapped_column(Boolean, default=False)  # Генерация в своём боте
-    broadcast_enabled = mapped_column(Boolean, default=False)     # Рассылка к себе в бота
-    lifetime_broadcast_enabled = mapped_column(Boolean, default=False)  # Одноразовая рассылка при lifetime
-    bonus_days = mapped_column(Integer, default=0)  # Бонус за апгрейд
+    gate_bot_customization = mapped_column(Boolean, default=False)
+    personal_bot_enabled = mapped_column(Boolean, default=False)
+    broadcast_enabled = mapped_column(Boolean, default=False)
+    lifetime_broadcast_enabled = mapped_column(Boolean, default=False)
+    bonus_days = mapped_column(Integer, default=0)
     is_lifetime = mapped_column(Boolean, default=False)
 
     # Связи
     category = relationship("ProductCategory", back_populates="products")
-    subscriptions = relationship("UserSubscription", back_populates="product")
+    subscriptions = relationship(
+        "UserSubscription",
+        back_populates="product",
+        foreign_keys="[UserSubscription.product_id]",
+    )
     payments = relationship("Payment", back_populates="product")
+    transactions = relationship(
+        "ReferralTransaction",
+        back_populates="product",
+        foreign_keys="[ReferralTransaction.product_id]",
+        cascade="all, delete-orphan"
+    )

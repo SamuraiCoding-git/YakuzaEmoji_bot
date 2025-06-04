@@ -15,8 +15,6 @@ class User(Base, TimestampMixin, TableNameMixin):
     gate_entries = relationship("UserGateEntry", back_populates="user", cascade="all, delete-orphan")
     owned_gate_bots = relationship("GateBot", back_populates="owner", cascade="all, delete-orphan")
     subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
-    reports = relationship("Report", back_populates="user", cascade="all, delete-orphan")
-    audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
     referral_transactions = relationship(
         "ReferralTransaction",
         foreign_keys="[ReferralTransaction.referral_user_id]",

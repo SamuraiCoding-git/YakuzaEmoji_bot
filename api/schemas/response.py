@@ -16,7 +16,7 @@ class BotResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class BotListResponse(BaseModel):
     total: int
@@ -59,7 +59,7 @@ class DiscountResponse(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ProductDiscountListResponse(BaseModel):
@@ -75,7 +75,7 @@ class ReferralResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class PromoCampaignResponse(BaseModel):
@@ -88,7 +88,7 @@ class PromoCampaignResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class PromoInteractionResponse(BaseModel):
@@ -99,7 +99,7 @@ class PromoInteractionResponse(BaseModel):
     payment_id: Optional[int]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -114,7 +114,7 @@ class ReferralTransactionResponse(BaseModel):
     transaction_date: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ReferralStatsResponse(BaseModel):
@@ -124,7 +124,7 @@ class ReferralStatsResponse(BaseModel):
     earned_days: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserResponse(BaseModel):
     id: int
@@ -149,7 +149,7 @@ class ReferredUserResponse(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ReferralRelationResponse(BaseModel):
     id: int
@@ -160,7 +160,7 @@ class ReferralRelationResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserListResponse(BaseModel):
     users: List[UserResponse]

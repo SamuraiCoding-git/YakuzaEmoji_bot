@@ -3,11 +3,14 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from ..filters.admin import AdminFilter
 from ..services.api import APIClient
 
 from ..misc.states import AdminStates
 
 admin_router = Router()
+admin_router.message.filter(AdminFilter())
 api = APIClient("http://localhost:8000/admin")
 
 # ========== Главная ==========

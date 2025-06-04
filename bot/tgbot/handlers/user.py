@@ -3,12 +3,13 @@ import traceback
 
 import httpx
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command, CommandObject
+from aiogram.filters import CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.markdown import hbold, hitalic
 
 from ..config import Config
+from ..filters.admin import AdminFilter
 from ..keyboards.callback_data_factory import SizeOptions
 from ..keyboards.inline import generate_size_options_keyboard, admin_approve_keyboard, cancel_keyboard, \
     payment_method_keyboard
@@ -27,6 +28,12 @@ SBP = "+79857490785"
 # async def photo(message: Message):
 #     await message.reply(message.photo[-1].file_id)
 
+
+@user_router.message(~F.from_user.id.in_({422999166, 6376488066}))
+async def start_forward(message: Message, state: FSMContext):
+    text = ("🚧 Тех.работы",
+            "Скоро новый апдейт ⏱️")
+    await message.answer("\n".join(text))
 
 @user_router.message(Command("forward"))
 async def start_forward(message: Message, state: FSMContext):
@@ -243,7 +250,15 @@ async def size_options_handler(call: CallbackQuery, callback_data: SizeOptions, 
     }
 
     try:
-         await client.request(method="post", path="stickers/generate", payload)
+         # await client.request(method="post", path="stickers/generate", payload)
+         async with httpx.AsyncClient() as client:
+             response = await client.post(
+                 "http://localhost:8000/stickers/generate",
+                 json=payload,
+                 timeout=240
+             )
+             response.raise_for_status()
+             result = response.json()
     except httpx.HTTPStatusError as e:
         await call.message.answer(f"❌ Сервер вернул ошибку: {e.response.text}")
     except Exception:

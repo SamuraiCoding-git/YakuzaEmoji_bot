@@ -16,4 +16,8 @@ class ReferralTransaction(Base, TimestampMixin, TableNameMixin):
 
     referral_user = relationship("User", foreign_keys=[referral_user_id], back_populates="referral_transactions")
     referred_user = relationship("User", foreign_keys=[referred_user_id], back_populates="referred_transactions")
-    product = relationship("Product", back_populates="transactions")
+    product = relationship(
+        "Product",
+        back_populates="transactions",
+        foreign_keys=[product_id]
+    )

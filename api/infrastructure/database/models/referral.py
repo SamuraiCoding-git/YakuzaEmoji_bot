@@ -11,4 +11,3 @@ class Referral(Base, TimestampMixin, TableNameMixin):
     product_id = mapped_column(Integer, ForeignKey("products.id"), nullable=True)
     bonus_days_granted = mapped_column(Integer, default=0)
 
-    product = relationship("Product")
